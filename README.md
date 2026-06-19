@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ระบบรายงานเยี่ยมบ้านนักเรียน (bkweb)
 
-## Getting Started
+เว็บแอปสำหรับบันทึกข้อมูลการเยี่ยมบ้านนักเรียน สรุปสถิติอัตโนมัติ และออกรูปเล่มรายงาน (Word/PDF)
+อ้างอิงรูปแบบจากเอกสาร *รูปเล่มเยี่ยมบ้าน* และ *เยี่ยมบ้านรายบุคคล* (ระบบดูแลช่วยเหลือนักเรียน)
 
-First, run the development server:
+- **Live:** https://bkweb-home-visit.vercel.app
+- **Stack:** Next.js 16 (App Router) · Supabase (Postgres + Auth + Storage) · Tailwind · deploy บน Vercel
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ความสามารถ
+- เข้าสู่ระบบสำหรับครู (หลายครู หลายห้อง ทั้งโรงเรียน)
+- จัดการชั้นเรียน + รายชื่อนักเรียน (วางรายชื่อทีละหลายคน ระบบแยกเพศ/คำนำหน้าให้)
+- แบบฟอร์มเยี่ยมบ้านครบ 17 หมวด (สภาพครอบครัว บ้าน ยานพาหนะ รายได้ พฤติกรรม/ความเสี่ยง ฯลฯ)
+- อัปโหลดรูปถ่ายบ้าน (เก็บใน Supabase Storage แบบส่วนตัว)
+- สรุปสถิติทั้งห้อง + ร้อยละ อัตโนมัติ
+- รายงานรูปเล่ม 5 ส่วน: ปกแบบบันทึก · รายงานเชิงพรรณนา · บันทึกรายบุคคล · ตารางสถิติ · ภาคผนวกรูปภาพ
+- ส่งออกเป็นไฟล์ **Word (.docx)** และพิมพ์/บันทึกเป็น **PDF**
+
+## โครงสร้างหลัก
+```
+src/
+  app/
+    login, signup            หน้าเข้าสู่ระบบ/สมัคร
+    (app)/                   ส่วนที่ต้องล็อกอิน (มีแถบเมนู)
+      dashboard, setup
+      classrooms/[id]/...    จัดการห้อง, ฟอร์มเยี่ยม, รายงาน
+    api/export/docx          สร้างไฟล์ Word ฝั่งเซิร์ฟเวอร์
+  components/                VisitForm, PhotoUploader, AppNav, ReportActions
+  lib/
+    form-schema.ts           นิยาม 17 หมวด + ฟังก์ชันคำนวณสถิติ
+    report.ts                ดึงข้อมูล+รวมรายงาน
+    supabase/                client/server
+  proxy.ts                   ป้องกัน route (Next 16 ใช้ proxy แทน middleware)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## รันในเครื่อง
+```bash
+npm install
+npm run dev        # http://localhost:3000
+```
+ต้องมีไฟล์ `.env.local` (มี `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ฐานข้อมูล (Supabase)
+ตารางนำหน้าด้วย `hv_`: `hv_schools, hv_profiles, hv_classrooms, hv_students, hv_visits, hv_photos`
+เปิด Row Level Security ทุกตาราง — ครูเห็น/แก้ได้เฉพาะห้องของตน (admin เห็นทั้งโรงเรียน)
+Storage bucket: `hv-photos` (private)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## หมายเหตุการดูแลระบบ
+- **การสมัคร:** ระบบเปิดให้สมัครเองได้ หากต้องการจำกัด ให้คุมการสมัครใน Supabase Auth
+- **ยืนยันอีเมล:** ถ้าต้องการให้สมัครแล้วใช้ได้ทันที ให้ปิด *Confirm email* ใน Supabase → Authentication → Providers → Email
+- **บัญชีทดลอง:** `kru@test.local` / `test1234` (มีข้อมูล ป.4 ตัวอย่าง 16 คน)

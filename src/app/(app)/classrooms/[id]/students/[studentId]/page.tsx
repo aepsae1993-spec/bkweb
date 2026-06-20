@@ -34,10 +34,22 @@ export default async function StudentVisitPage({
   return (
     <div>
       <Link href={`/classrooms/${id}`} className="text-sm text-indigo-600 hover:underline">← กลับชั้นเรียน</Link>
-      <h1 className="mb-1 mt-1 text-2xl font-bold text-slate-900">
-        แบบเยี่ยมบ้าน: {student.prefix || ""}{student.full_name}
-      </h1>
-      <p className="mb-6 text-sm text-slate-500">เลขที่ {student.number}</p>
+      <div className="mb-6 mt-1 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            แบบเยี่ยมบ้าน: {student.prefix || ""}{student.full_name}
+          </h1>
+          <p className="text-sm text-slate-500">เลขที่ {student.number}</p>
+        </div>
+        {visit?.id && (
+          <a
+            href={`/api/export/student-docx?studentId=${studentId}`}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            ⬇ ดาวน์โหลดแบบฟอร์มรายคน (Word)
+          </a>
+        )}
+      </div>
 
       <VisitForm
         classroomId={id}

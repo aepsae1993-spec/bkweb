@@ -10,6 +10,12 @@ export interface ReportStudent {
   visited: boolean | null;
   note: string | null;
   narrative: string | null;
+  phone: string | null;
+  visit_date: string | null;
+  parent_wish: string | null;
+  guardian_name: string | null;
+  guardian_relation: string | null;
+  data: VisitData;
   photos: { storage_path: string; caption: string | null }[];
 }
 
@@ -40,7 +46,7 @@ export async function buildReportData(classroomId: string): Promise<ReportData |
       ? supabase.from("hv_profiles").select("full_name, position").eq("id", classroom.teacher_id).maybeSingle()
       : Promise.resolve({ data: null }),
     supabase.from("hv_students").select("id, number, prefix, full_name, gender").eq("classroom_id", classroomId).order("number"),
-    supabase.from("hv_visits").select("id, student_id, visited, note, narrative, data").eq("classroom_id", classroomId),
+    supabase.from("hv_visits").select("id, student_id, visited, note, narrative, data, phone, visit_date, parent_wish, guardian_name, guardian_relation").eq("classroom_id", classroomId),
   ]);
 
   const visitByStudent = new Map((visits || []).map((v) => [v.student_id, v]));
@@ -71,6 +77,12 @@ export async function buildReportData(classroomId: string): Promise<ReportData |
       visited: v ? v.visited : null,
       note: v?.note ?? null,
       narrative: v?.narrative ?? null,
+      phone: v?.phone ?? null,
+      visit_date: v?.visit_date ?? null,
+      parent_wish: v?.parent_wish ?? null,
+      guardian_name: v?.guardian_name ?? null,
+      guardian_relation: v?.guardian_relation ?? null,
+      data: (v?.data as VisitData) ?? {},
       photos: v ? photosByVisit.get(v.id) || [] : [],
     };
   });

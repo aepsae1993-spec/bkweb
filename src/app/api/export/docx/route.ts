@@ -1,41 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-  AlignmentType, WidthType, BorderStyle, HeadingLevel, ImageRun, PageBreak, VerticalAlign,
-} from "docx";
+import { Document, Packer, Paragraph, Table, TableRow, AlignmentType, WidthType, PageBreak } from "docx";
 import { createClient } from "@/lib/supabase/server";
 import { buildReportData, REPORT_PRINCIPLE, REPORT_OBJECTIVES, REPORT_CONCLUSION } from "@/lib/report";
+import { P, cell, FONT, studentFormChildren, type PhotoImage } from "@/lib/docx-helpers";
 
 export const runtime = "nodejs";
-
-const FONT = "TH Sarabun New";
-const border = { style: BorderStyle.SINGLE, size: 1, color: "999999" };
-const borders = { top: border, bottom: border, left: border, right: border };
-
-function P(text: string, opts: { bold?: boolean; align?: (typeof AlignmentType)[keyof typeof AlignmentType]; size?: number; heading?: boolean; indent?: boolean } = {}) {
-  return new Paragraph({
-    alignment: opts.align,
-    heading: opts.heading ? HeadingLevel.HEADING_2 : undefined,
-    spacing: { after: 80 },
-    indent: opts.indent ? { firstLine: 480 } : undefined,
-    children: [new TextRun({ text, bold: opts.bold, font: FONT, size: opts.size ?? 30 })],
-  });
-}
-
-function cell(text: string, opts: { bold?: boolean; width?: number; align?: (typeof AlignmentType)[keyof typeof AlignmentType]; fill?: string; rowSpan?: number } = {}) {
-  return new TableCell({
-    borders,
-    width: opts.width ? { size: opts.width, type: WidthType.DXA } : undefined,
-    rowSpan: opts.rowSpan,
-    verticalAlign: VerticalAlign.CENTER,
-    shading: opts.fill ? { fill: opts.fill, type: "clear", color: "auto" } : undefined,
-    margins: { top: 40, bottom: 40, left: 80, right: 80 },
-    children: [new Paragraph({
-      alignment: opts.align,
-      children: [new TextRun({ text, bold: opts.bold, font: FONT, size: 26 })],
-    })],
-  });
-}
 
 async function fetchImage(supabase: Awaited<ReturnType<typeof createClient>>, path: string) {
   const { data } = await supabase.storage.from("hv-photos").download(path);
@@ -150,24 +119,17 @@ export async function GET(req: NextRequest) {
   }
   children.push(new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3800, 3760, 900, 900], rows: statRows }));
 
-  // ===== 5. ภาคผนวก รูปภาพ =====
-  const withPhotos = r.students.filter((s) => s.photos.length);
-  if (withPhotos.length) {
-    children.push(new Paragraph({ children: [new PageBreak()] }));
-    children.push(P("ภาคผนวก — ภาพถ่ายบ้านนักเรียน", { bold: true, align: AlignmentType.CENTER, size: 36 }));
-    for (const s of withPhotos) {
-      children.push(P(`${s.prefix || ""}${s.full_name}`, { bold: true }));
-      for (const ph of s.photos) {
-        const img = await fetchImage(supabase, ph.storage_path);
-        if (img) {
-          children.push(new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [new ImageRun({ type: img.type, data: img.buf, transformation: { width: 320, height: 240 }, altText: { title: ph.caption || "photo", description: ph.caption || "", name: "photo" } })],
-          }));
-        }
-        children.push(P(ph.caption || "", { align: AlignmentType.CENTER, size: 26 }));
-      }
+  // ===== 5. ภาคผนวก: แบบบันทึกการเยี่ยมบ้านรายบุคคล (1..N) =====
+  children.push(new Paragraph({ children: [new PageBreak()] }));
+  children.push(P("ภาคผนวก", { bold: true, align: AlignmentType.CENTER, size: 36 }));
+  children.push(P("แบบบันทึกการเยี่ยมบ้านนักเรียนเป็นรายบุคคล", { align: AlignmentType.CENTER, size: 30 }));
+  const ctx = { classroom: r.classroom, school: r.school, teacher: r.teacher };
+  for (const s of r.students) {
+    const photoImages: PhotoImage[] = [];
+    for (const ph of s.photos) {
+      photoImages.push({ caption: ph.caption, image: await fetchImage(supabase, ph.storage_path) });
     }
+    children.push(...studentFormChildren(s, ctx, photoImages, { pageBreakBefore: true }));
   }
 
   const doc = new Document({

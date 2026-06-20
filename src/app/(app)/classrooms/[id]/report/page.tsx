@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { buildReportData, REPORT_PRINCIPLE, REPORT_OBJECTIVES, REPORT_CONCLUSION } from "@/lib/report";
 import ReportActions from "@/components/ReportActions";
+import StudentFormView from "@/components/StudentFormView";
 
 export default async function ReportPage({
   params,
@@ -154,32 +155,17 @@ export default async function ReportPage({
 
       {/* ===== 5. ภาคผนวก: ภาพถ่าย ===== */}
       <section className={pageBox}>
-        <h2 className="mb-4 text-center text-xl font-bold">ภาคผนวก — ภาพถ่ายบ้านนักเรียน</h2>
-        {r.students.filter((s) => s.photos.length).length === 0 ? (
-          <p className="text-center text-slate-400">ยังไม่มีภาพถ่าย</p>
-        ) : (
-          <div className="space-y-6">
-            {r.students.filter((s) => s.photos.length).map((s) => (
-              <div key={s.id}>
-                <p className="mb-2 font-semibold">{s.prefix || ""}{s.full_name}</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {s.photos.map((p, i) => (
-                    <figure key={i} className="text-center">
-                      {signed[p.storage_path] ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={signed[p.storage_path]} alt={p.caption || ""} className="h-48 w-full rounded object-cover ring-1 ring-slate-200" />
-                      ) : (
-                        <div className="h-48 w-full rounded bg-slate-100" />
-                      )}
-                      <figcaption className="mt-1 text-xs text-slate-500">{p.caption}</figcaption>
-                    </figure>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <h2 className="text-center text-xl font-bold">ภาคผนวก</h2>
+        <p className="text-center text-slate-600">แบบบันทึกการเยี่ยมบ้านนักเรียนเป็นรายบุคคล</p>
       </section>
+      {r.students.map((s) => (
+        <StudentFormView
+          key={s.id}
+          s={s}
+          ctx={{ classroom: r.classroom, school: r.school, teacher: r.teacher }}
+          photoUrls={signed}
+        />
+      ))}
     </div>
   );
 }

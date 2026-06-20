@@ -122,7 +122,7 @@ function PhotoCertPage({ s, ctx, photoUrls }: { s: ReportStudent; ctx: FormCtx; 
         {PHOTO_TYPES.map((t, i) => <Box key={i} checked={i === 0} label={t} />)}
       </div>
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-3 space-y-2">
         {[0, 1].map((i) => {
           const p = s.photos[i];
           return (
@@ -130,9 +130,9 @@ function PhotoCertPage({ s, ctx, photoUrls }: { s: ReportStudent; ctx: FormCtx; 
               <figcaption className="mb-1 text-sm">{CAPTIONS[i]}</figcaption>
               {p && photoUrls[p.storage_path] ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={photoUrls[p.storage_path]} alt={CAPTIONS[i]} className="mx-auto max-h-72 rounded object-contain ring-1 ring-slate-200" />
+                <img src={photoUrls[p.storage_path]} alt={CAPTIONS[i]} className="mx-auto max-h-44 rounded object-contain ring-1 ring-slate-200" />
               ) : (
-                <div className="mx-auto flex h-44 w-2/3 items-center justify-center rounded bg-slate-100 text-xs text-slate-400">(ยังไม่มีภาพถ่าย)</div>
+                <div className="mx-auto flex h-36 w-1/2 items-center justify-center rounded bg-slate-100 text-xs text-slate-400">(ยังไม่มีภาพถ่าย)</div>
               )}
             </figure>
           );

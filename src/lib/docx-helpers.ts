@@ -103,10 +103,10 @@ function certBox(ctx: FormContext, s: ReportStudent): Table {
   return new Table({
     width: { size: 9360, type: WidthType.DXA },
     columnWidths: [9360],
-    rows: [new TableRow({ children: [new TableCell({
+    rows: [new TableRow({ cantSplit: true, children: [new TableCell({
       borders,
       width: { size: 9360, type: WidthType.DXA },
-      margins: { top: 160, bottom: 160, left: 200, right: 200 },
+      margins: { top: 100, bottom: 100, left: 200, right: 200 },
       children: lines,
     })] })],
   });
@@ -116,28 +116,29 @@ function certBox(ctx: FormContext, s: ReportStudent): Table {
 function photoCertPage(s: ReportStudent, ctx: FormContext, photoImages: PhotoImage[]): (Paragraph | Table)[] {
   const out: (Paragraph | Table)[] = [];
   out.push(new Paragraph({ children: [new PageBreak()] }));
-  out.push(P("บันทึกการเยี่ยมบ้าน", { bold: true, align: AlignmentType.CENTER, size: HEAD, underlineRule: true, spacingAfter: 160 }));
-  out.push(P("ภาพถ่ายบ้านนักเรียนที่ได้รับการเยี่ยมบ้าน", { bold: true }));
-  out.push(P(`ชื่อ – นามสกุลนักเรียน   ${s.prefix || ""}${s.full_name}`));
+  out.push(P("บันทึกการเยี่ยมบ้าน", { bold: true, align: AlignmentType.CENTER, size: HEAD, underlineRule: true, spacingAfter: 100 }));
+  out.push(P("ภาพถ่ายบ้านนักเรียนที่ได้รับการเยี่ยมบ้าน", { bold: true, spacingAfter: 30 }));
+  out.push(P(`ชื่อ – นามสกุลนักเรียน   ${s.prefix || ""}${s.full_name}`, { spacingAfter: 30 }));
   out.push(P("กรุณาระบุ  ภาพถ่ายที่แนบมาคือ", { spacingAfter: 20 }));
   PHOTO_TYPES.forEach((t, i) => out.push(optionLine(i === 0, t)));
 
   const imgs = photoImages.filter((p) => p.image);
   const captions = ["รูปที่ ๑ ภาพถ่ายสภาพบ้านนักเรียน", "รูปที่ ๒ ภาพถ่ายภายในบ้านนักเรียน"];
   for (let i = 0; i < Math.max(2, imgs.length); i++) {
-    out.push(P(captions[i] || `รูปที่ ${toThai(i + 1)}`, { align: AlignmentType.CENTER, spacingAfter: 40 }));
+    out.push(P(captions[i] || `รูปที่ ${toThai(i + 1)}`, { align: AlignmentType.CENTER, spacingAfter: 20 }));
     const ph = imgs[i];
     if (ph?.image) {
       out.push(new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { after: 120 },
-        children: [new ImageRun({ type: ph.image.type, data: ph.image.buf, transformation: { width: 360, height: 270 }, altText: { title: captions[i] || "photo", description: "", name: "photo" } })],
+        spacing: { after: 40 },
+        // ย่อรูปให้ทั้งหน้าภาพถ่าย + กล่องรับรอง อยู่ในหน้าเดียว
+        children: [new ImageRun({ type: ph.image.type, data: ph.image.buf, transformation: { width: 200, height: 150 }, altText: { title: captions[i] || "photo", description: "", name: "photo" } })],
       }));
     } else {
-      out.push(P("(ยังไม่มีภาพถ่าย)", { align: AlignmentType.CENTER, spacingAfter: 120 }));
+      out.push(P("(ยังไม่มีภาพถ่าย)", { align: AlignmentType.CENTER, spacingAfter: 40 }));
     }
   }
-  out.push(P("", { spacingAfter: 80 }));
+  out.push(P("", { spacingAfter: 40 }));
   out.push(certBox(ctx, s));
   return out;
 }

@@ -91,6 +91,29 @@ export interface FormContext {
 
 export type PhotoImage = { caption: string | null; image: { buf: Buffer; type: "png" | "jpg" | "gif" } | null };
 
+// อ่านขนาดจริงของรูป (JPEG/PNG) เพื่อย่อแบบรักษาสัดส่วน
+function imgSize(buf: Buffer, type: string): { w: number; h: number } {
+  try {
+    if (type === "png") return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+    let i = 2;
+    while (i < buf.length - 8) {
+      if (buf[i] !== 0xff) { i++; continue; }
+      const m = buf[i + 1];
+      if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) {
+        return { h: buf.readUInt16BE(i + 5), w: buf.readUInt16BE(i + 7) };
+      }
+      i += 2 + buf.readUInt16BE(i + 2);
+    }
+  } catch {}
+  return { w: 4, h: 3 };
+}
+// ย่อให้พอดีกรอบ (ไม่บิดสัดส่วน)
+function fitBox(buf: Buffer, type: string, maxW: number, maxH: number): { width: number; height: number } {
+  const { w, h } = imgSize(buf, type);
+  const scale = Math.min(maxW / w, maxH / h);
+  return { width: Math.round(w * scale), height: Math.round(h * scale) };
+}
+
 // กล่องรับรอง (ตาราง 1 ช่อง มีกรอบ)
 function certBox(ctx: FormContext, s: ReportStudent): Table {
   const lines = [
@@ -128,11 +151,12 @@ function photoCertPage(s: ReportStudent, ctx: FormContext, photoImages: PhotoIma
     out.push(P(captions[i] || `รูปที่ ${toThai(i + 1)}`, { align: AlignmentType.CENTER, spacingAfter: 20 }));
     const ph = imgs[i];
     if (ph?.image) {
+      // ย่อแบบรักษาสัดส่วน ให้รูป 2 รูป + กล่องรับรอง อยู่ในหน้าเดียวพอดี
+      const dim = fitBox(ph.image.buf, ph.image.type, 350, 200);
       out.push(new Paragraph({
         alignment: AlignmentType.CENTER,
         spacing: { after: 40 },
-        // ย่อรูปให้ทั้งหน้าภาพถ่าย + กล่องรับรอง อยู่ในหน้าเดียว
-        children: [new ImageRun({ type: ph.image.type, data: ph.image.buf, transformation: { width: 200, height: 150 }, altText: { title: captions[i] || "photo", description: "", name: "photo" } })],
+        children: [new ImageRun({ type: ph.image.type, data: ph.image.buf, transformation: dim, altText: { title: captions[i] || "photo", description: "", name: "photo" } })],
       }));
     } else {
       out.push(P("(ยังไม่มีภาพถ่าย)", { align: AlignmentType.CENTER, spacingAfter: 40 }));

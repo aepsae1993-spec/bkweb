@@ -2,12 +2,33 @@ import { FORM_SECTIONS, OTHER_SUFFIX, type VisitData } from "@/lib/form-schema";
 import type { ReportStudent } from "@/lib/report";
 
 const TH_MONTHS = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const toThai = (s: string | number) => String(s).replace(/[0-9]/g, (d) => "๐๑๒๓๔๕๖๗๘๙"[+d]);
 function thaiDate(iso: string | null): string {
   if (!iso) return "....../....../......";
   const d = new Date(iso + "T00:00:00");
   if (isNaN(d.getTime())) return iso;
   return `${d.getDate()} ${TH_MONTHS[d.getMonth()]} พ.ศ. ${d.getFullYear() + 543}`;
 }
+function thaiDateNum(iso: string | null): string {
+  if (!iso) return "วันที่ ......... เดือน ..................... พ.ศ. .........";
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d.getTime())) return iso;
+  return `วันที่ ${toThai(d.getDate())} เดือน ${TH_MONTHS[d.getMonth()]} พ.ศ. ${toThai(d.getFullYear() + 543)}`;
+}
+function gradeFull(grade: string): string {
+  const m = grade.match(/(\d+)/);
+  const n = m ? toThai(m[1]) : "";
+  if (/ม/.test(grade)) return `มัธยมศึกษาปีที่ ${n}`;
+  if (/อ/.test(grade)) return `อนุบาลปีที่ ${n}`;
+  return `ประถมศึกษาปีที่ ${n}`;
+}
+const PHOTO_TYPES = [
+  "บ้านที่อาศัยอยู่กับพ่อแม่ (เป็นเจ้าของ/เช่า)",
+  "บ้านของญาติ/ผู้ปกครองที่ไม่ใช่ญาติ",
+  "บ้านหรือที่พักประเภท วัด มูลนิธิ หอพัก โรงงาน อยู่กับนายจ้าง",
+  "ภาพนักเรียนและป้ายชื่อโรงเรียนเนื่องจากถ่ายภาพบ้านไม่ได้ เพราะบ้านอยู่ต่างอำเภอ/ต่างจังหวัด/ต่างประเทศ หรือไม่ได้รับอนุญาตให้ถ่ายภาพ",
+];
+const CAPTIONS = ["รูปที่ ๑ ภาพถ่ายสภาพบ้านนักเรียน", "รูปที่ ๒ ภาพถ่ายภายในบ้านนักเรียน"];
 
 export interface FormCtx {
   classroom: { grade_level: string; room: string | null; academic_year: string; semester: string };
@@ -35,6 +56,7 @@ export default function StudentFormView({
   const cls = `${ctx.classroom.grade_level}${ctx.classroom.room ? " ห้อง " + ctx.classroom.room : ""}`;
 
   return (
+    <>
     <div className="mx-auto mb-6 max-w-3xl rounded-lg bg-white p-8 shadow-sm ring-1 ring-slate-200 print-page">
       <h2 className="text-center text-lg font-bold">{s.number}. แบบบันทึกการเยี่ยมบ้านนักเรียน (รายบุคคล)</h2>
       <p className="mb-3 text-center text-sm">{ctx.school.name}</p>
@@ -82,25 +104,48 @@ export default function StudentFormView({
           <p>{ctx.teacher.position || "ครู"}ประจำชั้น</p>
         </div>
       </div>
+    </div>
+    <PhotoCertPage s={s} ctx={ctx} photoUrls={photoUrls} />
+    </>
+  );
+}
 
-      {s.photos.length > 0 && (
-        <div className="mt-5">
-          <p className="mb-2 text-center text-sm font-semibold">ภาพถ่ายบ้านนักเรียน</p>
-          <div className="grid grid-cols-2 gap-3">
-            {s.photos.map((p, i) => (
-              <figure key={i} className="text-center">
-                {photoUrls[p.storage_path] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photoUrls[p.storage_path]} alt={p.caption || ""} className="h-44 w-full rounded object-cover ring-1 ring-slate-200" />
-                ) : (
-                  <div className="h-44 w-full rounded bg-slate-100" />
-                )}
-                <figcaption className="mt-1 text-xs text-slate-500">{p.caption}</figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      )}
+// หน้า "บันทึกการเยี่ยมบ้าน" (ภาพถ่าย) — ขึ้นหน้าใหม่เสมอ
+function PhotoCertPage({ s, ctx, photoUrls }: { s: ReportStudent; ctx: FormCtx; photoUrls: Record<string, string> }) {
+  return (
+    <div className="mx-auto mb-6 max-w-3xl rounded-lg bg-white p-8 shadow-sm ring-1 ring-slate-200 print-page">
+      <h2 className="border-b-2 border-slate-800 pb-1 text-center text-lg font-bold">บันทึกการเยี่ยมบ้าน</h2>
+      <p className="mt-4 text-sm font-semibold">ภาพถ่ายบ้านนักเรียนที่ได้รับการเยี่ยมบ้าน</p>
+      <p className="text-sm">ชื่อ – นามสกุลนักเรียน　{s.prefix || ""}{s.full_name}</p>
+      <p className="text-sm">กรุณาระบุ ภาพถ่ายที่แนบมาคือ</p>
+      <div className="ml-3 space-y-0.5">
+        {PHOTO_TYPES.map((t, i) => <Box key={i} checked={i === 0} label={t} />)}
+      </div>
+
+      <div className="mt-4 space-y-4">
+        {[0, 1].map((i) => {
+          const p = s.photos[i];
+          return (
+            <figure key={i} className="text-center">
+              <figcaption className="mb-1 text-sm">{CAPTIONS[i]}</figcaption>
+              {p && photoUrls[p.storage_path] ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photoUrls[p.storage_path]} alt={CAPTIONS[i]} className="mx-auto max-h-72 rounded object-contain ring-1 ring-slate-200" />
+              ) : (
+                <div className="mx-auto flex h-44 w-2/3 items-center justify-center rounded bg-slate-100 text-xs text-slate-400">(ยังไม่มีภาพถ่าย)</div>
+              )}
+            </figure>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 rounded border border-slate-400 p-4 text-center text-sm">
+        <p>ขอรับรองว่าข้อมูล และภาพถ่ายบ้านของนักเรียนเป็นความจริง</p>
+        <p className="mt-4">ลงชื่อ...........................................................</p>
+        <p>({ctx.teacher.full_name})</p>
+        <p>{ctx.teacher.position || "ครู"}ประจำชั้น{gradeFull(ctx.classroom.grade_level)}</p>
+        <p>{thaiDateNum(s.visit_date)}</p>
+      </div>
     </div>
   );
 }

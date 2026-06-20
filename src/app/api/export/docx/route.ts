@@ -133,7 +133,7 @@ export async function GET(req: NextRequest) {
   }
 
   const doc = new Document({
-    styles: { default: { document: { run: { font: FONT, size: 30 } } } },
+    styles: { default: { document: { run: { font: FONT, size: 32 } } } },
     sections: [{
       properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
       children,

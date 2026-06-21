@@ -85,6 +85,7 @@ export async function addStudentsBulk(formData: FormData) {
 
   if (rows.length) await supabase.from("hv_students").insert(rows);
   revalidatePath(`/classrooms/${classroomId}`);
+  revalidatePath(`/classrooms/${classroomId}/manage`);
 }
 
 export async function deleteStudent(formData: FormData) {
@@ -93,4 +94,30 @@ export async function deleteStudent(formData: FormData) {
   const classroomId = String(formData.get("classroom_id"));
   await supabase.from("hv_students").delete().eq("id", id);
   revalidatePath(`/classrooms/${classroomId}`);
+  revalidatePath(`/classrooms/${classroomId}/manage`);
+}
+
+// แก้ไขข้อมูลนักเรียน (เลขที่ / คำนำหน้า / ชื่อ-สกุล / เพศ)
+export async function updateStudent(formData: FormData) {
+  const { supabase } = await requireUser();
+  const id = String(formData.get("id"));
+  const classroomId = String(formData.get("classroom_id"));
+  const numberRaw = String(formData.get("number") || "").trim();
+  const prefix = String(formData.get("prefix") || "").trim() || null;
+  const fullName = String(formData.get("full_name") || "").trim();
+  let gender: string | null = null;
+  if (prefix) gender = /ชาย|นาย|ช\./.test(prefix) ? "M" : "F";
+
+  await supabase
+    .from("hv_students")
+    .update({
+      number: numberRaw ? Number(numberRaw) : null,
+      prefix,
+      full_name: fullName,
+      gender,
+    })
+    .eq("id", id);
+
+  revalidatePath(`/classrooms/${classroomId}`);
+  revalidatePath(`/classrooms/${classroomId}/manage`);
 }

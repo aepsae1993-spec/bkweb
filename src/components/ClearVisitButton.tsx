@@ -32,9 +32,9 @@ export default function ClearVisitButton({ studentId }: { studentId: string }) {
       onClick={clear}
       disabled={busy}
       title="ล้างข้อมูลที่กรอก + เช็คอิน (สำหรับทดสอบ)"
-      className="whitespace-nowrap text-xs text-orange-600 hover:underline disabled:opacity-60"
+      className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700 hover:bg-orange-100 disabled:opacity-60"
     >
-      {busy ? "กำลังล้าง…" : "ล้างข้อมูล"}
+      {busy ? "กำลังล้าง…" : "🧹 ล้างข้อมูล"}
     </button>
   );
 }

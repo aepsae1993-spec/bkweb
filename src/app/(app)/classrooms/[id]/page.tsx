@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { addStudentsBulk, deleteStudent, deleteClassroom } from "@/lib/actions/classrooms";
 import CheckInButton from "@/components/CheckInButton";
 import ClearVisitButton from "@/components/ClearVisitButton";
+import ClearClassButton from "@/components/ClearClassButton";
 
 // ย่อคำนำหน้าให้ประหยัดพื้นที่บนมือถือ
 function shortPrefix(prefix: string | null): string {
@@ -63,25 +63,30 @@ export default async function ClassroomDetail({
           </h1>
           <p className="text-sm text-slate-500">นักเรียน {total} คน · เยี่ยมแล้ว (เช็คอิน) {checkedInCount} คน · บันทึกข้อมูลแล้ว {recordedCount} คน</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/classrooms/${id}/manage`} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            👥 จัดการนักเรียน
+          </Link>
           <Link href={`/classrooms/${id}/report`} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
             📄 รายงาน / ออกรูปเล่ม
           </Link>
+          <ClearClassButton classroomId={id} />
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-          {total === 0 && (
-            <div className="px-4 py-8 text-center text-slate-400">ยังไม่มีนักเรียน เพิ่มจากกล่องด้านล่าง</div>
-          )}
+      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+        {total === 0 ? (
+          <div className="px-4 py-10 text-center text-slate-400">
+            ยังไม่มีนักเรียน — <Link href={`/classrooms/${id}/manage`} className="font-semibold text-indigo-600 hover:underline">เพิ่มนักเรียน</Link>
+          </div>
+        ) : (
           <ul className="divide-y divide-slate-100">
             {(students || []).map((s) => {
               const v = visitMap.get(s.id);
               const checkedIn = !!v?.checked_in_at;
               const recorded = hasData(v);
               return (
-                <li key={s.id} className="flex flex-col gap-2 px-3 py-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:gap-3">
+                <li key={s.id} className="flex flex-col gap-2 px-3 py-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:gap-4">
                   {/* เลขที่ + ชื่อ */}
                   <div className="flex min-w-0 flex-1 items-baseline gap-2">
                     <span className="w-6 shrink-0 text-sm text-slate-400">{s.number}</span>
@@ -89,49 +94,32 @@ export default async function ClassroomDetail({
                       {shortPrefix(s.prefix)}{s.full_name}
                     </Link>
                   </div>
-                  {/* สถานะ + ปุ่ม */}
-                  <div className="flex flex-wrap items-center gap-1.5 pl-8 sm:justify-end sm:pl-0">
-                    {checkedIn
-                      ? <span className="whitespace-nowrap rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">เยี่ยมแล้ว</span>
-                      : <span className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">ยังไม่เยี่ยม</span>}
-                    {recorded
-                      ? <span className="whitespace-nowrap rounded-full bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">บันทึกแล้ว</span>
-                      : <span className="whitespace-nowrap rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">ยังไม่บันทึก</span>}
-                    <CheckInButton studentId={s.id} classroomId={id} checkedIn={checkedIn} />
-                    <Link href={`/classrooms/${id}/students/${s.id}`} className="whitespace-nowrap text-xs font-semibold text-indigo-600 hover:underline">กรอกข้อมูล</Link>
-                    {v && <ClearVisitButton studentId={s.id} />}
-                    <form action={deleteStudent}>
-                      <input type="hidden" name="id" value={s.id} />
-                      <input type="hidden" name="classroom_id" value={id} />
-                      <button className="whitespace-nowrap text-xs text-red-500 hover:underline">ลบ</button>
-                    </form>
+
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pl-8 sm:pl-0">
+                    {/* สถานะ (ป้ายบอกสถานะ ไม่ใช่ปุ่ม) */}
+                    <div className="flex cursor-default select-none items-center gap-1.5">
+                      {checkedIn
+                        ? <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />เยี่ยมแล้ว</span>
+                        : <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-slate-400" />ยังไม่เยี่ยม</span>}
+                      {recorded
+                        ? <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-700"><span className="h-1.5 w-1.5 rounded-full bg-sky-500" />บันทึกแล้ว</span>
+                        : <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />ยังไม่บันทึก</span>}
+                    </div>
+
+                    {/* ปุ่มกด */}
+                    <div className="flex items-center gap-2 sm:border-l sm:border-slate-200 sm:pl-3">
+                      <CheckInButton studentId={s.id} classroomId={id} checkedIn={checkedIn} />
+                      <Link href={`/classrooms/${id}/students/${s.id}`} className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">
+                        ✏️ กรอกข้อมูล
+                      </Link>
+                      {v && <ClearVisitButton studentId={s.id} />}
+                    </div>
                   </div>
                 </li>
               );
             })}
           </ul>
-        </div>
-
-        <div className="space-y-4">
-          <form action={addStudentsBulk} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <h2 className="mb-2 text-lg font-semibold text-slate-800">+ เพิ่มนักเรียน</h2>
-            <p className="mb-3 text-xs text-slate-500">วางรายชื่อ บรรทัดละ 1 คน (ใส่คำนำหน้าได้ เช่น เด็กชาย/เด็กหญิง ระบบจะแยกเพศให้)</p>
-            <input type="hidden" name="classroom_id" value={id} />
-            <textarea
-              name="names" rows={8}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              placeholder={"เด็กชายนนทกร แสงศรี\nเด็กหญิงระพีพรรณ คำกลั่น"}
-            />
-            <button type="submit" className="mt-3 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">
-              เพิ่มเข้าชั้นเรียน
-            </button>
-          </form>
-
-          <form action={deleteClassroom} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <input type="hidden" name="id" value={id} />
-            <button className="text-sm text-red-500 hover:underline">🗑 ลบชั้นเรียนนี้</button>
-          </form>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -8,33 +8,26 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: classroomData } = await supabase
-    .from("hv_classrooms")
-    .select("id, grade_level, room, academic_year, semester");
-  const classrooms = sortClassrooms(classroomData ?? []);
+  // โหลดขนานกัน: ชั้นเรียน + โปรไฟล์
+  const [classroomRes, profileRes] = await Promise.all([
+    supabase.from("hv_classrooms").select("id, grade_level, room, academic_year, semester"),
+    supabase.from("hv_profiles").select("full_name, school_id").eq("id", user!.id).maybeSingle(),
+  ]);
+  const classrooms = sortClassrooms(classroomRes.data ?? []);
+  const profile = profileRes.data;
 
-  // นับนักเรียน/การเยี่ยม ต่อห้อง
-  const ids = (classrooms || []).map((c) => c.id);
+  // นับนักเรียน/การเยี่ยม ต่อห้อง (โหลดขนานกัน)
+  const ids = classrooms.map((c) => c.id);
   const counts: Record<string, { students: number; visited: number }> = {};
   if (ids.length) {
-    const { data: students } = await supabase
-      .from("hv_students")
-      .select("id, classroom_id")
-      .in("classroom_id", ids);
-    const { data: visits } = await supabase
-      .from("hv_visits")
-      .select("classroom_id, visited")
-      .in("classroom_id", ids);
+    const [studentsRes, visitsRes] = await Promise.all([
+      supabase.from("hv_students").select("id, classroom_id").in("classroom_id", ids),
+      supabase.from("hv_visits").select("classroom_id, visited").in("classroom_id", ids),
+    ]);
     for (const id of ids) counts[id] = { students: 0, visited: 0 };
-    for (const s of students || []) counts[s.classroom_id].students++;
-    for (const v of visits || []) if (v.visited) counts[v.classroom_id].visited++;
+    for (const s of studentsRes.data || []) counts[s.classroom_id].students++;
+    for (const v of visitsRes.data || []) if (v.visited) counts[v.classroom_id].visited++;
   }
-
-  const { data: profile } = await supabase
-    .from("hv_profiles")
-    .select("full_name, school_id")
-    .eq("id", user!.id)
-    .maybeSingle();
 
   return (
     <div>

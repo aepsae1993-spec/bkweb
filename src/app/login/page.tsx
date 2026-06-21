@@ -1,11 +1,10 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { SCHOOL_LOGO_URL } from "@/lib/branding";
+import { SCHOOL_LOGO_URL, LOGIN_EMAIL, TEACHERS } from "@/lib/branding";
 
 export default function LoginPage() {
   return (
@@ -18,21 +17,32 @@ export default function LoginPage() {
 function LoginInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const [email, setEmail] = useState("");
+  const [teacher, setTeacher] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!teacher) {
+      setError("กรุณาเลือกชื่อครู");
+      return;
+    }
     setLoading(true);
     setError(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: LOGIN_EMAIL, password });
     if (error) {
-      setError("เข้าสู่ระบบไม่สำเร็จ: ตรวจสอบอีเมลและรหัสผ่าน");
+      setError("เข้าสู่ระบบไม่สำเร็จ: รหัสผ่านไม่ถูกต้อง");
       setLoading(false);
       return;
+    }
+    // บันทึกชื่อครูที่เลือก ให้แสดงในระบบ/รายงาน
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("hv_profiles").update({ full_name: teacher }).eq("id", user.id);
     }
     router.push(params.get("next") || "/dashboard");
     router.refresh();
@@ -48,12 +58,18 @@ function LoginInner() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">อีเมล</label>
-            <input
-              type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              placeholder="teacher@example.com"
-            />
+            <label className="mb-1 block text-sm font-medium text-slate-700">เลือกชื่อครู</label>
+            <select
+              required
+              value={teacher}
+              onChange={(e) => setTeacher(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="">— เลือกชื่อครู —</option>
+              {TEACHERS.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">รหัสผ่าน</label>
@@ -71,10 +87,6 @@ function LoginInner() {
             {loading ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
           </button>
         </form>
-        <p className="mt-5 text-center text-sm text-slate-500">
-          ยังไม่มีบัญชี?{" "}
-          <Link href="/signup" className="font-semibold text-indigo-600 hover:underline">สมัครใช้งาน</Link>
-        </p>
       </div>
     </div>
   );

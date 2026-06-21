@@ -17,6 +17,8 @@ export interface VisitPayload {
   guardian_name: string | null;
   guardian_relation: string | null;
   data: VisitData;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export async function saveVisit(payload: VisitPayload) {
@@ -41,6 +43,9 @@ export async function saveVisit(payload: VisitPayload) {
         guardian_name: payload.guardian_name,
         guardian_relation: payload.guardian_relation,
         data: payload.data,
+        latitude: payload.latitude,
+        longitude: payload.longitude,
+        checked_in_at: payload.latitude != null ? new Date().toISOString() : null,
         created_by: user.id,
       },
       { onConflict: "student_id" }

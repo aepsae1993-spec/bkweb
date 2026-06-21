@@ -130,6 +130,9 @@ export type Database = {
           updated_at: string
           visit_date: string | null
           visited: boolean
+          latitude: number | null
+          longitude: number | null
+          checked_in_at: string | null
         }
         Insert: {
           classroom_id: string
@@ -147,6 +150,9 @@ export type Database = {
           updated_at?: string
           visit_date?: string | null
           visited?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          checked_in_at?: string | null
         }
         Update: Partial<Database["public"]["Tables"]["hv_visits"]["Insert"]>
         Relationships: []

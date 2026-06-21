@@ -10,6 +10,7 @@ export default async function StudentVisitPage({
   params: Promise<{ id: string; studentId: string }>;
 }) {
   const { id, studentId } = await params;
+  // visit form incl. GPS check-in
   const supabase = await createClient();
 
   const { data: student } = await supabase
@@ -65,6 +66,8 @@ export default async function StudentVisitPage({
           guardian_name: visit?.guardian_name ?? null,
           guardian_relation: visit?.guardian_relation ?? null,
           data: (visit?.data as VisitData) ?? {},
+          latitude: visit?.latitude ?? null,
+          longitude: visit?.longitude ?? null,
         }}
         photos={photos ?? []}
       />

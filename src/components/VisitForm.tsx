@@ -17,8 +17,6 @@ interface Initial {
   guardian_name: string | null;
   guardian_relation: string | null;
   data: VisitData;
-  latitude: number | null;
-  longitude: number | null;
 }
 
 export default function VisitForm({
@@ -42,35 +40,9 @@ export default function VisitForm({
   const [guardianRelation, setGuardianRelation] = useState(initial.guardian_relation || "");
   const [note, setNote] = useState(initial.note || "");
   const [data, setData] = useState<VisitData>(initial.data || {});
-  const [lat, setLat] = useState<number | null>(initial.latitude);
-  const [lng, setLng] = useState<number | null>(initial.longitude);
-  const [geoMsg, setGeoMsg] = useState<string | null>(null);
-  const [geoBusy, setGeoBusy] = useState(false);
   const [visitId, setVisitId] = useState<string | null>(initial.id);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-
-  function checkIn() {
-    if (!navigator.geolocation) {
-      setGeoMsg("อุปกรณ์ไม่รองรับ GPS");
-      return;
-    }
-    setGeoBusy(true);
-    setGeoMsg(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLat(Number(pos.coords.latitude.toFixed(6)));
-        setLng(Number(pos.coords.longitude.toFixed(6)));
-        setGeoBusy(false);
-        setGeoMsg("ได้ตำแหน่งแล้ว — อย่าลืมกดบันทึกข้อมูล");
-      },
-      (err) => {
-        setGeoBusy(false);
-        setGeoMsg("ขอตำแหน่งไม่สำเร็จ: " + err.message + " (ต้องอนุญาตให้เข้าถึงตำแหน่ง)");
-      },
-      { enableHighAccuracy: true, timeout: 15000 }
-    );
-  }
 
   function setSingle(fieldId: string, value: string) {
     setData((d) => ({ ...d, [fieldId]: value }));
@@ -101,8 +73,6 @@ export default function VisitForm({
       guardian_name: guardianName || null,
       guardian_relation: guardianRelation || null,
       data,
-      latitude: lat,
-      longitude: lng,
     });
     setSaving(false);
     if (res.ok) {
@@ -213,32 +183,6 @@ export default function VisitForm({
             <input value={note} onChange={(e) => setNote(e.target.value)} className={input} />
           </div>
         </div>
-      </section>
-
-      {/* เช็คอินพิกัดบ้าน (GPS) */}
-      <section className={card}>
-        <h2 className="mb-2 text-lg font-semibold text-slate-800">📍 เช็คอินตำแหน่งบ้าน (GPS)</h2>
-        <p className="mb-3 text-sm text-slate-500">กดเมื่ออยู่ที่บ้านนักเรียน เพื่อบันทึกพิกัดสำหรับดูบนแผนที่ภายหลัง</p>
-        <div className="flex flex-wrap items-center gap-3">
-          <button type="button" onClick={checkIn} disabled={geoBusy}
-            className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60">
-            {geoBusy ? "กำลังหาตำแหน่ง…" : "📍 เช็คอินตำแหน่งนี้"}
-          </button>
-          {lat != null && lng != null ? (
-            <div className="flex items-center gap-2 text-sm">
-              <span className="rounded-md bg-emerald-50 px-2 py-1 font-medium text-emerald-700">
-                {lat.toFixed(6)}, {lng.toFixed(6)}
-              </span>
-              <a href={`https://www.google.com/maps?q=${lat},${lng}`} target="_blank" rel="noreferrer"
-                className="text-indigo-600 hover:underline">ดูบนแผนที่</a>
-              <button type="button" onClick={() => { setLat(null); setLng(null); }}
-                className="text-red-500 hover:underline">ล้าง</button>
-            </div>
-          ) : (
-            <span className="text-sm text-slate-400">ยังไม่ได้เช็คอิน</span>
-          )}
-        </div>
-        {geoMsg && <p className="mt-2 text-sm text-slate-600">{geoMsg}</p>}
       </section>
 
       {/* ภาพถ่ายบ้าน */}

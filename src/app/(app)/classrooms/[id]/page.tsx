@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { addStudentsBulk, deleteStudent, deleteClassroom } from "@/lib/actions/classrooms";
+import CheckInButton from "@/components/CheckInButton";
 
 export default async function ClassroomDetail({
   params,
@@ -26,12 +27,20 @@ export default async function ClassroomDetail({
 
   const { data: visits } = await supabase
     .from("hv_visits")
-    .select("student_id, visited, updated_at")
+    .select("student_id, checked_in_at, narrative, note, data")
     .eq("classroom_id", id);
   const visitMap = new Map((visits || []).map((v) => [v.student_id, v]));
 
+  const hasData = (v: { narrative: string | null; note: string | null; data: unknown } | undefined) =>
+    !!v && (
+      !!v.narrative ||
+      !!v.note ||
+      (typeof v.data === "object" && v.data !== null && Object.keys(v.data as object).length > 0)
+    );
+
   const total = students?.length || 0;
-  const visited = (visits || []).filter((v) => v.visited).length;
+  const checkedInCount = (visits || []).filter((v) => v.checked_in_at).length;
+  const recordedCount = (visits || []).filter((v) => hasData(v)).length;
 
   return (
     <div>
@@ -42,7 +51,7 @@ export default async function ClassroomDetail({
             {classroom.grade_level} {classroom.room ? `ห้อง ${classroom.room}` : ""}
             <span className="ml-2 text-base font-normal text-slate-500">ภาคเรียน {classroom.semester}/{classroom.academic_year}</span>
           </h1>
-          <p className="text-sm text-slate-500">นักเรียน {total} คน · เยี่ยมแล้ว {visited} คน</p>
+          <p className="text-sm text-slate-500">นักเรียน {total} คน · เยี่ยมแล้ว (เช็คอิน) {checkedInCount} คน · บันทึกข้อมูลแล้ว {recordedCount} คน</p>
         </div>
         <div className="flex gap-2">
           <Link href={`/classrooms/${id}/report`} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
@@ -58,16 +67,20 @@ export default async function ClassroomDetail({
               <tr>
                 <th className="px-4 py-3 font-medium">เลขที่</th>
                 <th className="px-4 py-3 font-medium">ชื่อ - นามสกุล</th>
-                <th className="px-4 py-3 font-medium">สถานะ</th>
+                <th className="px-4 py-3 font-medium">การเยี่ยม</th>
+                <th className="px-4 py-3 font-medium">ข้อมูล</th>
+                <th className="px-4 py-3 text-right font-medium">เช็คอิน</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {total === 0 && (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400">ยังไม่มีนักเรียน เพิ่มจากกล่องด้านขวา</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">ยังไม่มีนักเรียน เพิ่มจากกล่องด้านขวา</td></tr>
               )}
               {(students || []).map((s) => {
                 const v = visitMap.get(s.id);
+                const checkedIn = !!v?.checked_in_at;
+                const recorded = hasData(v);
                 return (
                   <tr key={s.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3 text-slate-500">{s.number}</td>
@@ -77,13 +90,17 @@ export default async function ClassroomDetail({
                       </Link>
                     </td>
                     <td className="px-4 py-3">
-                      {v ? (
-                        v.visited
-                          ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">เยี่ยมแล้ว</span>
-                          : <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">บันทึกแล้ว (ยังไม่ได้เยี่ยม)</span>
-                      ) : (
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">ยังไม่บันทึก</span>
-                      )}
+                      {checkedIn
+                        ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">เยี่ยมแล้ว</span>
+                        : <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">ยังไม่เยี่ยม</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      {recorded
+                        ? <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">บันทึกข้อมูลแล้ว</span>
+                        : <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">ยังไม่ได้บันทึก</span>}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <CheckInButton studentId={s.id} classroomId={id} checkedIn={checkedIn} />
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">

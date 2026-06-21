@@ -66,8 +66,6 @@ export default async function StudentVisitPage({
           guardian_name: visit?.guardian_name ?? null,
           guardian_relation: visit?.guardian_relation ?? null,
           data: (visit?.data as VisitData) ?? {},
-          latitude: visit?.latitude ?? null,
-          longitude: visit?.longitude ?? null,
         }}
         photos={photos ?? []}
       />

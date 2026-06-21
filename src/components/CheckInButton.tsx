@@ -51,20 +51,31 @@ export default function CheckInButton({
   }
 
   return (
-    <div className="inline-flex flex-col items-end">
+    <div className="inline-flex flex-col items-start">
       <button
         onClick={checkIn}
         disabled={busy}
         title="เช็คอินพิกัดบ้าน ณ ตำแหน่งปัจจุบัน"
-        className={`rounded-lg px-2.5 py-1 text-xs font-semibold ring-1 disabled:opacity-60 ${
-          checkedIn
+        className={`inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-semibold ring-1 disabled:opacity-70 ${
+          busy
+            ? "bg-rose-500 text-white ring-rose-500"
+            : checkedIn
             ? "bg-emerald-50 text-emerald-700 ring-emerald-300 hover:bg-emerald-100"
             : "bg-rose-600 text-white ring-rose-600 hover:bg-rose-700"
         }`}
       >
-        {busy ? "กำลังหา…" : checkedIn ? "📍 เช็คอินใหม่" : "📍 เช็คอิน"}
+        {busy ? (
+          <>
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+            กำลังหาตำแหน่ง…
+          </>
+        ) : checkedIn ? (
+          "📍 เช็คอินใหม่"
+        ) : (
+          "📍 เช็คอิน"
+        )}
       </button>
-      {err && <span className="mt-0.5 max-w-[120px] text-right text-[10px] text-red-500">{err}</span>}
+      {err && <span className="mt-0.5 max-w-[140px] text-[10px] text-red-500">{err}</span>}
     </div>
   );
 }

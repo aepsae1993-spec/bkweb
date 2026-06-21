@@ -3,6 +3,16 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { addStudentsBulk, deleteStudent, deleteClassroom } from "@/lib/actions/classrooms";
 import CheckInButton from "@/components/CheckInButton";
+import ClearVisitButton from "@/components/ClearVisitButton";
+
+// ย่อคำนำหน้าให้ประหยัดพื้นที่บนมือถือ
+function shortPrefix(prefix: string | null): string {
+  if (!prefix) return "";
+  return prefix
+    .replace(/^เด็กชาย\s*/, "ด.ช.")
+    .replace(/^เด็กหญิง\s*/, "ด.ญ.")
+    .replace(/^นางสาว\s*/, "น.ส.");
+}
 
 export default async function ClassroomDetail({
   params,
@@ -62,61 +72,44 @@ export default async function ClassroomDetail({
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-slate-500">
-              <tr>
-                <th className="px-4 py-3 font-medium">เลขที่</th>
-                <th className="px-4 py-3 font-medium">ชื่อ - นามสกุล</th>
-                <th className="px-4 py-3 font-medium">การเยี่ยม</th>
-                <th className="px-4 py-3 font-medium">ข้อมูล</th>
-                <th className="px-4 py-3 text-right font-medium">เช็คอิน</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {total === 0 && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">ยังไม่มีนักเรียน เพิ่มจากกล่องด้านขวา</td></tr>
-              )}
-              {(students || []).map((s) => {
-                const v = visitMap.get(s.id);
-                const checkedIn = !!v?.checked_in_at;
-                const recorded = hasData(v);
-                return (
-                  <tr key={s.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-slate-500">{s.number}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800">
-                      <Link href={`/classrooms/${id}/students/${s.id}`} className="hover:text-indigo-600 hover:underline">
-                        {s.prefix || ""}{s.full_name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      {checkedIn
-                        ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">เยี่ยมแล้ว</span>
-                        : <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">ยังไม่เยี่ยม</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      {recorded
-                        ? <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">บันทึกข้อมูลแล้ว</span>
-                        : <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">ยังไม่ได้บันทึก</span>}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <CheckInButton studentId={s.id} classroomId={id} checkedIn={checkedIn} />
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Link href={`/classrooms/${id}/students/${s.id}`} className="text-xs font-semibold text-indigo-600 hover:underline">กรอกข้อมูล</Link>
-                        <form action={deleteStudent}>
-                          <input type="hidden" name="id" value={s.id} />
-                          <input type="hidden" name="classroom_id" value={id} />
-                          <button className="text-xs text-red-500 hover:underline">ลบ</button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          {total === 0 && (
+            <div className="px-4 py-8 text-center text-slate-400">ยังไม่มีนักเรียน เพิ่มจากกล่องด้านล่าง</div>
+          )}
+          <ul className="divide-y divide-slate-100">
+            {(students || []).map((s) => {
+              const v = visitMap.get(s.id);
+              const checkedIn = !!v?.checked_in_at;
+              const recorded = hasData(v);
+              return (
+                <li key={s.id} className="flex flex-col gap-2 px-3 py-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:gap-3">
+                  {/* เลขที่ + ชื่อ */}
+                  <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                    <span className="w-6 shrink-0 text-sm text-slate-400">{s.number}</span>
+                    <Link href={`/classrooms/${id}/students/${s.id}`} className="truncate font-medium text-slate-800 hover:text-indigo-600 hover:underline">
+                      {shortPrefix(s.prefix)}{s.full_name}
+                    </Link>
+                  </div>
+                  {/* สถานะ + ปุ่ม */}
+                  <div className="flex flex-wrap items-center gap-1.5 pl-8 sm:justify-end sm:pl-0">
+                    {checkedIn
+                      ? <span className="whitespace-nowrap rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">เยี่ยมแล้ว</span>
+                      : <span className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">ยังไม่เยี่ยม</span>}
+                    {recorded
+                      ? <span className="whitespace-nowrap rounded-full bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">บันทึกแล้ว</span>
+                      : <span className="whitespace-nowrap rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">ยังไม่บันทึก</span>}
+                    <CheckInButton studentId={s.id} classroomId={id} checkedIn={checkedIn} />
+                    <Link href={`/classrooms/${id}/students/${s.id}`} className="whitespace-nowrap text-xs font-semibold text-indigo-600 hover:underline">กรอกข้อมูล</Link>
+                    {v && <ClearVisitButton studentId={s.id} />}
+                    <form action={deleteStudent}>
+                      <input type="hidden" name="id" value={s.id} />
+                      <input type="hidden" name="classroom_id" value={id} />
+                      <button className="whitespace-nowrap text-xs text-red-500 hover:underline">ลบ</button>
+                    </form>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         </div>
 
         <div className="space-y-4">

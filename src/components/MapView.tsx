@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type * as LType from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { gradeOrder } from "@/lib/grade";
 
 export interface MapPoint {
   lat: number;
@@ -14,18 +15,18 @@ export interface MapPoint {
   date: string | null;
 }
 
-const PALETTE = ["#e11d48", "#2563eb", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#65a30d"];
+// 8 สีตามลำดับชั้น (อ.2 → ป.6)
+const PALETTE = ["#2563EB", "#16A34A", "#F97316", "#DC2626", "#9333EA", "#EAB308", "#06B6D4", "#EC4899"];
 
-// สีประจำแต่ละชั้น (ป.3 = เหลือง)
 const GRADE_COLORS: Record<string, string> = {
-  "อ.2": "#db2777",
-  "อ.3": "#65a30d",
-  "ป.1": "#2563eb",
-  "ป.2": "#16a34a",
-  "ป.3": "#eab308",
-  "ป.4": "#e11d48",
-  "ป.5": "#7c3aed",
-  "ป.6": "#0891b2",
+  "อ.2": "#2563EB", // น้ำเงิน
+  "อ.3": "#16A34A", // เขียว
+  "ป.1": "#F97316", // ส้ม
+  "ป.2": "#DC2626", // แดง
+  "ป.3": "#9333EA", // ม่วง
+  "ป.4": "#EAB308", // เหลืองทอง
+  "ป.5": "#06B6D4", // ฟ้า
+  "ป.6": "#EC4899", // ชมพู
 };
 
 export default function MapView({ points }: { points: MapPoint[] }) {
@@ -33,7 +34,10 @@ export default function MapView({ points }: { points: MapPoint[] }) {
   const mapRef = useRef<LType.Map | null>(null);
   const layerRef = useRef<LType.LayerGroup | null>(null);
 
-  const grades = useMemo(() => Array.from(new Set(points.map((p) => p.grade))).sort(), [points]);
+  const grades = useMemo(
+    () => Array.from(new Set(points.map((p) => p.grade))).sort((a, b) => gradeOrder(a) - gradeOrder(b)),
+    [points]
+  );
   const colorOf = useMemo(() => {
     const m: Record<string, string> = {};
     grades.forEach((g, i) => (m[g] = GRADE_COLORS[g] ?? PALETTE[i % PALETTE.length]));

@@ -83,7 +83,7 @@ export default function SetupForm({ initial }: { initial: Initial }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={label}>ชื่อ - นามสกุล</label>
-            <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={input} placeholder="นายประวีณ เส็งเรียบ" />
+            <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={input} placeholder="เช่น นายสมชาย ใจดี" />
           </div>
           <div>
             <label className={label}>ตำแหน่ง</label>

@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { SCHOOL_LOGO_URL } from "@/lib/branding";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -43,6 +45,7 @@ export default function SignupPage() {
     <div className="flex flex-1 items-center justify-center p-4">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
         <div className="mb-6 text-center">
+          <Image src={SCHOOL_LOGO_URL} alt="โลโก้โรงเรียน" width={72} height={72} className="mx-auto mb-3 object-contain" priority />
           <h1 className="text-xl font-bold text-slate-900">สมัครใช้งาน</h1>
           <p className="mt-1 text-sm text-slate-500">สำหรับครูประจำชั้น</p>
         </div>

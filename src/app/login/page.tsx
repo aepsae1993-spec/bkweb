@@ -2,8 +2,10 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { SCHOOL_LOGO_URL } from "@/lib/branding";
 
 export default function LoginPage() {
   return (
@@ -40,7 +42,7 @@ function LoginInner() {
     <div className="flex flex-1 items-center justify-center p-4">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-2xl">🏠</div>
+          <Image src={SCHOOL_LOGO_URL} alt="โลโก้โรงเรียน" width={80} height={80} className="mx-auto mb-3 object-contain" priority />
           <h1 className="text-xl font-bold text-slate-900">ระบบเยี่ยมบ้านนักเรียน</h1>
           <p className="mt-1 text-sm text-slate-500">เข้าสู่ระบบสำหรับครู</p>
         </div>

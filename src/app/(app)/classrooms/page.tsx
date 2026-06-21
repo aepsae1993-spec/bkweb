@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createClassroom } from "@/lib/actions/classrooms";
+import { sortClassrooms } from "@/lib/grade";
 
 export default async function ClassroomsPage() {
   const supabase = await createClient();
-  const { data: classrooms } = await supabase
+  const { data } = await supabase
     .from("hv_classrooms")
-    .select("id, grade_level, room, academic_year, semester")
-    .order("created_at", { ascending: false });
+    .select("id, grade_level, room, academic_year, semester");
+  const classrooms = sortClassrooms(data ?? []);
 
   const input =
     "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500";

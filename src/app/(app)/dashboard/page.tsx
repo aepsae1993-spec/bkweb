@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { sortClassrooms } from "@/lib/grade";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -7,10 +8,10 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: classrooms } = await supabase
+  const { data: classroomData } = await supabase
     .from("hv_classrooms")
-    .select("id, grade_level, room, academic_year, semester")
-    .order("created_at", { ascending: false });
+    .select("id, grade_level, room, academic_year, semester");
+  const classrooms = sortClassrooms(classroomData ?? []);
 
   // นับนักเรียน/การเยี่ยม ต่อห้อง
   const ids = (classrooms || []).map((c) => c.id);

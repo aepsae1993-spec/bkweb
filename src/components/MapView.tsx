@@ -16,6 +16,18 @@ export interface MapPoint {
 
 const PALETTE = ["#e11d48", "#2563eb", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#65a30d"];
 
+// สีประจำแต่ละชั้น (ป.3 = เหลือง)
+const GRADE_COLORS: Record<string, string> = {
+  "อ.2": "#db2777",
+  "อ.3": "#65a30d",
+  "ป.1": "#2563eb",
+  "ป.2": "#16a34a",
+  "ป.3": "#eab308",
+  "ป.4": "#e11d48",
+  "ป.5": "#7c3aed",
+  "ป.6": "#0891b2",
+};
+
 export default function MapView({ points }: { points: MapPoint[] }) {
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LType.Map | null>(null);
@@ -24,7 +36,7 @@ export default function MapView({ points }: { points: MapPoint[] }) {
   const grades = useMemo(() => Array.from(new Set(points.map((p) => p.grade))).sort(), [points]);
   const colorOf = useMemo(() => {
     const m: Record<string, string> = {};
-    grades.forEach((g, i) => (m[g] = PALETTE[i % PALETTE.length]));
+    grades.forEach((g, i) => (m[g] = GRADE_COLORS[g] ?? PALETTE[i % PALETTE.length]));
     return m;
   }, [grades]);
 
@@ -56,10 +68,12 @@ export default function MapView({ points }: { points: MapPoint[] }) {
           radius: 8, color: "#fff", weight: 2, fillColor: colorOf[p.grade], fillOpacity: 0.9,
         });
         m.bindPopup(
-          `<div style="font-family:sans-serif;font-size:13px">
+          `<div style="font-family:sans-serif;font-size:13px;line-height:1.5">
             <b>${p.grade} เลขที่ ${p.number ?? "-"}</b><br/>${p.name}<br/>
             <span style="color:#16a34a">${p.visited ? "เยี่ยมแล้ว ✓" : "ยังไม่เยี่ยม"}</span>
             ${p.date ? "<br/>วันที่ " + p.date : ""}
+            <br/><a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}" target="_blank" rel="noopener noreferrer"
+              style="display:inline-block;margin-top:6px;padding:4px 10px;background:#2563eb;color:#fff;border-radius:8px;font-weight:600;text-decoration:none">🧭 นำทางไปบ้านนี้</a>
           </div>`
         );
         m.addTo(layer);

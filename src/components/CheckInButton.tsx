@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { todayLocalISO } from "@/lib/date";
 
 export default function CheckInButton({
   studentId,
@@ -34,6 +35,7 @@ export default function CheckInButton({
             latitude: Number(pos.coords.latitude.toFixed(6)),
             longitude: Number(pos.coords.longitude.toFixed(6)),
             checked_in_at: new Date().toISOString(),
+            visit_date: todayLocalISO(),
             visited: true,
           },
           { onConflict: "student_id" }

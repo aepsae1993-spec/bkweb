@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import MapView, { type MapPoint } from "@/components/MapView";
+import { thaiLongDate } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export default async function MapPage() {
       name: `${r.hv_students?.prefix ?? ""}${r.hv_students?.full_name ?? ""}`,
       number: r.hv_students?.number ?? null,
       visited: r.visited,
-      date: r.visit_date,
+      date: thaiLongDate(r.visit_date),
     }));
 
   return (

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { computeStatistics, type VisitData, type SectionStat } from "@/lib/form-schema";
+import { getCurrentTeacher } from "@/lib/teacher";
 
 export interface ReportStudent {
   id: string;
@@ -95,6 +96,10 @@ export async function buildReportData(classroomId: string): Promise<ReportData |
     (visits || []).map((v) => ({ data: (v.data as VisitData) || {} }))
   );
 
+  // ชื่อครูผู้ทำรายงาน = ครูที่ล็อกอินอยู่ตอนนี้ (จาก cookie) ถ้ามี
+  const currentTeacher = await getCurrentTeacher();
+  const teacherName = currentTeacher || teacher?.full_name || "";
+
   return {
     classroom: {
       grade_level: classroom.grade_level,
@@ -103,7 +108,7 @@ export async function buildReportData(classroomId: string): Promise<ReportData |
       semester: classroom.semester,
     },
     school: school || { name: "", area: null, director_name: null },
-    teacher: teacher || { full_name: "", position: "ครู" },
+    teacher: { full_name: teacherName, position: teacher?.position || "ครู" },
     students: reportStudents,
     stats,
     totals: {

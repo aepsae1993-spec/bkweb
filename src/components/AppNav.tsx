@@ -20,6 +20,7 @@ export default function AppNav({ name }: { name: string }) {
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
+    document.cookie = "hv_teacher=; path=/; max-age=0; SameSite=Lax";
     router.push("/login");
     router.refresh();
   }

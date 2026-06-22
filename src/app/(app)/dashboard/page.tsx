@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { sortClassrooms } from "@/lib/grade";
+import { getCurrentTeacher } from "@/lib/teacher";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -15,6 +16,7 @@ export default async function DashboardPage() {
   ]);
   const classrooms = sortClassrooms(classroomRes.data ?? []);
   const profile = profileRes.data;
+  const teacher = await getCurrentTeacher();
 
   // นับนักเรียน/การเยี่ยม ต่อห้อง (โหลดขนานกัน)
   const ids = classrooms.map((c) => c.id);
@@ -31,7 +33,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-bold text-slate-900">สวัสดี {profile?.full_name || "คุณครู"} 👋</h1>
+      <h1 className="mb-1 text-2xl font-bold text-slate-900">สวัสดี {teacher || "คุณครู"} 👋</h1>
       <p className="mb-6 text-slate-500">ระบบบันทึกและรายงานการเยี่ยมบ้านนักเรียน</p>
 
       {!profile?.school_id && (

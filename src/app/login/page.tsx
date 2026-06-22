@@ -37,13 +37,8 @@ function LoginInner() {
       setLoading(false);
       return;
     }
-    // บันทึกชื่อครูที่เลือก ให้แสดงในระบบ/รายงาน
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from("hv_profiles").update({ full_name: teacher }).eq("id", user.id);
-    }
+    // เก็บชื่อครูที่เลือกไว้ใน cookie ของเครื่องนี้ (แยกกันแต่ละคน ไม่ทับกัน)
+    document.cookie = `hv_teacher=${encodeURIComponent(teacher)}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
     router.push(params.get("next") || "/dashboard");
     router.refresh();
   }

@@ -41,6 +41,7 @@ export async function saveVisit(payload: VisitPayload) {
         guardian_name: payload.guardian_name,
         guardian_relation: payload.guardian_relation,
         data: payload.data,
+        deleted_at: null,
         created_by: user.id,
       },
       { onConflict: "student_id" }

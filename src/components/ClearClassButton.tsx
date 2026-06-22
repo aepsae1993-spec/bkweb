@@ -20,7 +20,11 @@ export default function ClearClassButton({ classroomId }: { classroomId: string 
     if (!confirm("ยืนยันล้างข้อมูลการเยี่ยม + เช็คอิน + รูปภาพ ของนักเรียนทั้งห้อง? (ไม่ลบรายชื่อนักเรียน)")) return;
     setBusy(true);
     const supabase = createClient();
-    const { error } = await supabase.from("hv_visits").delete().eq("classroom_id", classroomId);
+    const { error } = await supabase
+      .from("hv_visits")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("classroom_id", classroomId)
+      .is("deleted_at", null);
     setBusy(false);
     if (error) alert("ล้างข้อมูลไม่สำเร็จ: " + error.message);
     else router.refresh();

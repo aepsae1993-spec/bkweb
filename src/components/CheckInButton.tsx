@@ -37,6 +37,7 @@ export default function CheckInButton({
             checked_in_at: new Date().toISOString(),
             visit_date: todayLocalISO(),
             visited: true,
+            deleted_at: null,
           },
           { onConflict: "student_id" }
         );

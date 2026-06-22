@@ -11,6 +11,7 @@ const links = [
   { href: "/classrooms", label: "ชั้นเรียน", icon: "📚" },
   { href: "/map", label: "แผนที่", icon: "🗺️" },
   { href: "/distance", label: "ระยะทาง", icon: "📏" },
+  { href: "/trash", label: "ถังขยะ", icon: "🗑️" },
   { href: "/setup", label: "ตั้งค่า", icon: "⚙️" },
 ];
 

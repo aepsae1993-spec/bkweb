@@ -29,6 +29,7 @@ export type Database = {
           school_id?: string | null
           semester: string
           teacher_id?: string | null
+          deleted_at?: string | null
         }
         Update: Partial<Database["public"]["Tables"]["hv_classrooms"]["Insert"]>
         Relationships: []
@@ -113,6 +114,7 @@ export type Database = {
           id?: string
           number?: number | null
           prefix?: string | null
+          deleted_at?: string | null
         }
         Update: Partial<Database["public"]["Tables"]["hv_students"]["Insert"]>
         Relationships: []
@@ -161,6 +163,7 @@ export type Database = {
           checked_in_at?: string | null
           road_distance_m?: number | null
           road_duration_s?: number | null
+          deleted_at?: string | null
         }
         Update: Partial<Database["public"]["Tables"]["hv_visits"]["Insert"]>
         Relationships: []
@@ -171,6 +174,10 @@ export type Database = {
       hv_is_admin: { Args: Record<string, never>; Returns: boolean }
       hv_my_school: { Args: Record<string, never>; Returns: string }
       hv_owns_classroom: { Args: { cid: string }; Returns: boolean }
+      hv_trash: { Args: Record<string, never>; Returns: Json }
+      hv_restore_visit: { Args: { vid: string }; Returns: undefined }
+      hv_restore_student: { Args: { sid: string }; Returns: undefined }
+      hv_restore_classroom: { Args: { cid: string }; Returns: undefined }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>

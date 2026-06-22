@@ -169,7 +169,7 @@ export default function MapView({ points, school, roster }: { points: MapPoint[]
       {
         student_id: homeStudentId, classroom_id: homeClassId,
         latitude: homePos.lat, longitude: homePos.lng,
-        checked_in_at: new Date().toISOString(), visit_date: todayLocalISO(), visited: true,
+        checked_in_at: new Date().toISOString(), visit_date: todayLocalISO(), visited: true, deleted_at: null,
       },
       { onConflict: "student_id" }
     );

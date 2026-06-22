@@ -80,6 +80,8 @@ export type Database = {
           director_name: string | null
           id: string
           name: string
+          latitude: number | null
+          longitude: number | null
         }
         Insert: {
           area?: string | null
@@ -87,6 +89,8 @@ export type Database = {
           director_name?: string | null
           id?: string
           name: string
+          latitude?: number | null
+          longitude?: number | null
         }
         Update: Partial<Database["public"]["Tables"]["hv_schools"]["Insert"]>
         Relationships: []
@@ -133,6 +137,8 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           checked_in_at: string | null
+          road_distance_m: number | null
+          road_duration_s: number | null
         }
         Insert: {
           classroom_id: string
@@ -153,6 +159,8 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           checked_in_at?: string | null
+          road_distance_m?: number | null
+          road_duration_s?: number | null
         }
         Update: Partial<Database["public"]["Tables"]["hv_visits"]["Insert"]>
         Relationships: []

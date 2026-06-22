@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import MapView, { type MapPoint } from "@/components/MapView";
+import MapView, { type MapPoint, type SchoolLoc } from "@/components/MapView";
 import { thaiLongDate } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +15,23 @@ interface VisitRow {
 
 export default async function MapPage() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // โรงเรียนของครู (สำหรับปักหมุด/วัดระยะทาง)
+  const { data: profile } = await supabase
+    .from("hv_profiles")
+    .select("school_id")
+    .eq("id", user!.id)
+    .maybeSingle();
+  const { data: schoolRow } = profile?.school_id
+    ? await supabase.from("hv_schools").select("id, latitude, longitude").eq("id", profile.school_id).maybeSingle()
+    : { data: null };
+  const school: SchoolLoc | null = schoolRow
+    ? { id: schoolRow.id, lat: schoolRow.latitude, lng: schoolRow.longitude }
+    : null;
+
   const { data } = await supabase
     .from("hv_visits")
     .select("latitude, longitude, visited, visit_date, hv_students(number, prefix, full_name), hv_classrooms(grade_level)")
@@ -44,13 +61,13 @@ export default async function MapPage() {
         </div>
       </div>
 
-      {points.length === 0 ? (
-        <div className="rounded-2xl bg-white p-10 text-center text-slate-500 ring-1 ring-slate-200">
-          ยังไม่มีการเช็คอิน GPS — เปิดหน้ากรอกข้อมูลนักเรียนแล้วกด “เช็คอินตำแหน่งบ้าน” ขณะอยู่ที่บ้าน
+      {points.length === 0 && (
+        <div className="mb-3 rounded-xl bg-slate-50 p-3 text-sm text-slate-500 ring-1 ring-slate-200">
+          ยังไม่มีการเช็คอิน GPS — แต่สามารถกด “🏫 ตั้งตำแหน่งโรงเรียน” เพื่อปักหมุดโรงเรียนไว้ก่อนได้
         </div>
-      ) : (
-        <MapView points={points} />
       )}
+
+      <MapView points={points} school={school} />
     </div>
   );
 }

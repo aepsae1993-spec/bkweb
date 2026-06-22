@@ -10,6 +10,7 @@ const links = [
   { href: "/dashboard", label: "หน้าหลัก", icon: "🏠" },
   { href: "/classrooms", label: "ชั้นเรียน", icon: "📚" },
   { href: "/map", label: "แผนที่", icon: "🗺️" },
+  { href: "/distance", label: "ระยะทาง", icon: "📏" },
   { href: "/setup", label: "ตั้งค่า", icon: "⚙️" },
 ];
 

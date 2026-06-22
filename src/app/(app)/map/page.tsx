@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import MapView, { type MapPoint, type SchoolLoc } from "@/components/MapView";
+import MapView, { type MapPoint, type SchoolLoc, type RosterClass } from "@/components/MapView";
 import { thaiLongDate } from "@/lib/date";
+import { sortClassrooms } from "@/lib/grade";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,26 @@ export default async function MapPage() {
       date: thaiLongDate(r.visit_date),
     }));
 
+  // รายชื่อสำหรับ "ปักหมุดบ้านเอง"
+  const [{ data: clsAll }, { data: studentsAll }, { data: pinned }] = await Promise.all([
+    supabase.from("hv_classrooms").select("id, grade_level, room"),
+    supabase.from("hv_students").select("id, classroom_id, number, prefix, full_name"),
+    supabase.from("hv_visits").select("student_id").not("latitude", "is", null),
+  ]);
+  const pinnedSet = new Set((pinned ?? []).map((p) => p.student_id));
+  const roster: RosterClass[] = sortClassrooms(clsAll ?? []).map((c) => ({
+    id: c.id,
+    label: `${c.grade_level}${c.room ? "/" + c.room : ""}`,
+    students: (studentsAll ?? [])
+      .filter((s) => s.classroom_id === c.id)
+      .sort((a, b) => (a.number ?? 0) - (b.number ?? 0))
+      .map((s) => ({
+        id: s.id,
+        label: `${s.number ? s.number + ". " : ""}${s.prefix ?? ""}${s.full_name}`,
+        hasPin: pinnedSet.has(s.id),
+      })),
+  }));
+
   return (
     <div>
       <div className="mb-4 flex items-end justify-between">
@@ -67,7 +88,7 @@ export default async function MapPage() {
         </div>
       )}
 
-      <MapView points={points} school={school} />
+      <MapView points={points} school={school} roster={roster} />
     </div>
   );
 }

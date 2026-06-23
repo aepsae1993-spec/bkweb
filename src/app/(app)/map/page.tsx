@@ -21,9 +21,9 @@ export default async function MapPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // โหมดปักหมุดเอง เปิดเฉพาะครูประวีณ
+  // โหมดผู้ดูแล (ตั้งตำแหน่งโรงเรียน/ปักหมุดเอง) เปิดเฉพาะครูประวีณ
   const teacher = await getCurrentTeacher();
-  const allowManualPin = teacher === "ครูประวีณ";
+  const allowAdmin = teacher === "ครูประวีณ";
 
   // โรงเรียนของครู (สำหรับปักหมุด/วัดระยะทาง)
   const { data: profile } = await supabase
@@ -93,7 +93,7 @@ export default async function MapPage() {
         </div>
       )}
 
-      <MapView points={points} school={school} roster={roster} allowManualPin={allowManualPin} />
+      <MapView points={points} school={school} roster={roster} allowAdmin={allowAdmin} />
     </div>
   );
 }

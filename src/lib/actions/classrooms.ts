@@ -42,7 +42,7 @@ export async function createClassroom(formData: FormData) {
 export async function deleteClassroom(formData: FormData) {
   const { supabase } = await requireUser();
   const id = String(formData.get("id"));
-  await supabase.from("hv_classrooms").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+  await supabase.rpc("hv_trash_classroom", { cid: id });
   revalidatePath("/classrooms");
   redirect("/classrooms");
 }
@@ -92,7 +92,7 @@ export async function deleteStudent(formData: FormData) {
   const { supabase } = await requireUser();
   const id = String(formData.get("id"));
   const classroomId = String(formData.get("classroom_id"));
-  await supabase.from("hv_students").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+  await supabase.rpc("hv_trash_student", { sid: id });
   revalidatePath(`/classrooms/${classroomId}`);
   revalidatePath(`/classrooms/${classroomId}/manage`);
 }

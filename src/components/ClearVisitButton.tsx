@@ -20,8 +20,8 @@ export default function ClearVisitButton({ studentId }: { studentId: string }) {
     if (!confirm("ยืนยันล้างข้อมูลการเยี่ยม + เช็คอิน + รูปภาพ ของนักเรียนคนนี้?")) return;
     setBusy(true);
     const supabase = createClient();
-    // ย้ายลงถังขยะ (soft-delete) กู้คืนได้
-    const { error } = await supabase.from("hv_visits").update({ deleted_at: new Date().toISOString() }).eq("student_id", studentId);
+    // ย้ายลงถังขยะ (soft-delete) ผ่าน rpc (เลี่ยง RLS) กู้คืนได้
+    const { error } = await supabase.rpc("hv_trash_visit_by_student", { sid: studentId });
     setBusy(false);
     if (error) alert("ล้างข้อมูลไม่สำเร็จ: " + error.message);
     else router.refresh();

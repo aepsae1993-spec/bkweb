@@ -178,6 +178,10 @@ export type Database = {
       hv_restore_visit: { Args: { vid: string }; Returns: undefined }
       hv_restore_student: { Args: { sid: string }; Returns: undefined }
       hv_restore_classroom: { Args: { cid: string }; Returns: undefined }
+      hv_trash_visit_by_student: { Args: { sid: string }; Returns: undefined }
+      hv_trash_class_visits: { Args: { cid: string }; Returns: undefined }
+      hv_trash_student: { Args: { sid: string }; Returns: undefined }
+      hv_trash_classroom: { Args: { cid: string }; Returns: undefined }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>

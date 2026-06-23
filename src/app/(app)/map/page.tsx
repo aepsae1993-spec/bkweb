@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import MapView, { type MapPoint, type SchoolLoc, type RosterClass } from "@/components/MapView";
 import { thaiLongDate } from "@/lib/date";
 import { sortClassrooms } from "@/lib/grade";
+import { getCurrentTeacher } from "@/lib/teacher";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,10 @@ export default async function MapPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // โหมดปักหมุดเอง เปิดเฉพาะครูประวีณ
+  const teacher = await getCurrentTeacher();
+  const allowManualPin = teacher === "ครูประวีณ";
 
   // โรงเรียนของครู (สำหรับปักหมุด/วัดระยะทาง)
   const { data: profile } = await supabase
@@ -88,7 +93,7 @@ export default async function MapPage() {
         </div>
       )}
 
-      <MapView points={points} school={school} roster={roster} />
+      <MapView points={points} school={school} roster={roster} allowManualPin={allowManualPin} />
     </div>
   );
 }

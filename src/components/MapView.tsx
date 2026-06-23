@@ -24,7 +24,9 @@ const GRADE_COLORS: Record<string, string> = {
 
 type Mode = "none" | "school" | "home";
 
-export default function MapView({ points, school, roster }: { points: MapPoint[]; school: SchoolLoc | null; roster: RosterClass[] }) {
+const PIN_PASSWORD = "admin1234";
+
+export default function MapView({ points, school, roster, allowManualPin }: { points: MapPoint[]; school: SchoolLoc | null; roster: RosterClass[]; allowManualPin: boolean }) {
   const router = useRouter();
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LType.Map | null>(null);
@@ -146,6 +148,19 @@ export default function MapView({ points, school, roster }: { points: MapPoint[]
     setActive((cur) => { const n = new Set(cur); if (n.has(g)) n.delete(g); else n.add(g); return n; });
   }
   function pickMode(m: Mode) { setMode((cur) => (cur === m ? "none" : m)); setHomePos(null); }
+
+  const [pinUnlocked, setPinUnlocked] = useState(false);
+  function pickHomeMode() {
+    if (mode === "home") { setMode("none"); setHomePos(null); return; }
+    if (!pinUnlocked) {
+      const pwd = window.prompt("ใส่รหัสผ่านเพื่อใช้โหมดปักหมุดบ้านเอง");
+      if (pwd == null) return;
+      if (pwd !== PIN_PASSWORD) { alert("รหัสผ่านไม่ถูกต้อง"); return; }
+      setPinUnlocked(true);
+    }
+    setMode("home");
+    setHomePos(null);
+  }
   function pickClass(id: string) {
     setHomeClassId(id);
     const next = roster.find((c) => c.id === id)?.students.find((s) => !s.hasPin);
@@ -198,7 +213,9 @@ export default function MapView({ points, school, roster }: { points: MapPoint[]
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <button onClick={() => pickMode("school")} className={btn(mode === "school")}>{mode === "school" ? "✖ ยกเลิก" : "🏫 ตั้งตำแหน่งโรงเรียน"}</button>
-        <button onClick={() => pickMode("home")} className={btn(mode === "home")}>{mode === "home" ? "✖ ยกเลิก" : "🏠 ปักหมุดบ้านนักเรียนเอง"}</button>
+        {allowManualPin && (
+          <button onClick={pickHomeMode} className={btn(mode === "home")}>{mode === "home" ? "✖ ยกเลิก" : "🏠 ปักหมุดบ้านนักเรียนเอง"}</button>
+        )}
         {mode === "none" && !schoolPos && <span className="text-sm text-amber-600">ยังไม่ได้ตั้งตำแหน่งโรงเรียน</span>}
       </div>
 
